@@ -1,0 +1,57 @@
+from fastapi import APIRouter, status, Depends
+from typing import Annotated
+
+from app.models import User
+from app.schemas import UserRead, UserCreate, UserUpdate
+from app.api.deps import db, get_current_user_http
+from app.services import UserService
+
+user_router = APIRouter(prefix="/user", tags=["user"])
+
+
+@user_router.post("/me", status_code=status.HTTP_201_CREATED, response_model=UserRead)
+async def create_user(
+        user: UserCreate,
+        session: db
+):
+    service = UserService(session=session)
+    return await service.create_user_service(user)
+
+
+@user_router.get("/me", status_code=status.HTTP_200_OK, response_model=UserRead)
+async def get_user(
+        user: Annotated[
+            User,
+            Depends(get_current_user_http)
+        ]
+):
+    return await UserService.get_user_service(user)
+
+
+@user_router.patch("/me", status_code=status.HTTP_200_OK, response_model=UserRead)
+async def update_user(
+        user: Annotated[
+            User,
+            Depends(get_current_user_http)
+        ],
+        user_update: UserUpdate,
+        session: db
+):
+    service = UserService(session=session)
+
+    return await service.update_user_service(user=user, user_update=user_update)
+
+
+@user_router.delete("/me", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_user(
+        user: Annotated[
+            User,
+            Depends(get_current_user_http)
+        ],
+        session: db
+):
+    service = UserService(session=session)
+
+    await service.delete_user_service(user)
+
+    return True
