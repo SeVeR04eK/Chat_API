@@ -2,11 +2,13 @@ from fastapi import APIRouter, status, Depends
 from typing import Annotated
 
 from app.models import User
-from app.schemas import UserRead, UserCreate, UserUpdate
+from app.schemas import UserRead, UserCreate, UserUpdate, OnlineUsersCount
 from app.api.deps import db, get_current_user_http
 from app.services import UserService
+from app.api.websockets.chat import manager
 
 user_router = APIRouter(prefix="/user", tags=["user"])
+
 
 
 @user_router.post("/me", status_code=status.HTTP_201_CREATED, response_model=UserRead)
@@ -55,3 +57,9 @@ async def delete_user(
     await service.delete_user_service(user)
 
     return True
+
+
+@user_router.get("/online", status_code=status.HTTP_200_OK, response_model=OnlineUsersCount)
+async def get_online_users_count():
+    count = manager.get_total_connections()
+    return OnlineUsersCount(count=count)

@@ -6,10 +6,13 @@ from sqlalchemy.exc import IntegrityError
 
 from app.api import api_router
 from app.db import engine
+from app.core import settings
+from app.core.limiter import init_db_limiter
 
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
+    init_db_limiter(settings.db_max_concurrent_queries)
     yield
     await engine.dispose()
 

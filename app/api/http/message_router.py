@@ -4,6 +4,7 @@ from typing import Annotated, Optional
 from app.schemas import MessageRead
 from app.api.deps import db, get_current_user_http
 from app.repository import MessagesRepository
+from app.core.config import settings
 
 history_router = APIRouter(prefix="/history", tags=["messages"])
 
@@ -18,11 +19,11 @@ async def get_all_messages(
         ],
         limit: Annotated[
             Optional[int],
-            Query(title="Limit of messages", ge=1, le=100)
+            Query(title="Limit of messages", ge=settings.pagination_min_limit, le=settings.pagination_max_limit)
         ] = None,
         offset: Annotated[
             Optional[int],
-            Query(title="Offset of messages", ge=0, le=100)
+            Query(title="Offset of messages", ge=0, le=settings.pagination_max_offset)
         ] = None,
         from_newest: Annotated[
             Optional[bool],

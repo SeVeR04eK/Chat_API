@@ -4,6 +4,7 @@ from typing import Annotated, Optional
 from app.schemas import RoomRead, RoomCreate
 from app.api.deps import db, get_current_user_http
 from app.services import RoomService
+from app.core.config import settings
 
 room_router = APIRouter(prefix="/room", tags=["room"])
 
@@ -24,11 +25,11 @@ async def get_all_rooms(
         session: db,
         limit: Annotated[
             Optional[int],
-            Query(title="Limit of rooms", ge=1, le=100)
+            Query(title="Limit of rooms", ge=settings.pagination_min_limit, le=settings.pagination_max_limit)
         ] = None,
         offset: Annotated[
             Optional[int],
-            Query(title="Offset of rooms", ge=0, le=100)
+            Query(title="Offset of rooms", ge=0, le=settings.pagination_max_offset)
         ] = None,
         from_newest: Annotated[
             Optional[bool],

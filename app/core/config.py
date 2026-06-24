@@ -12,6 +12,10 @@ class Settings(BaseSettings):
     access_token_expire_minutes: timedelta = timedelta(minutes=15)
     refresh_token_expire_days: timedelta = timedelta(days=7)
     algorithm: str = 'HS256'
+    pagination_min_limit: int = 1
+    pagination_max_limit: int = 100
+    pagination_max_offset: int = 100
+    db_max_concurrent_queries: int = 10
 
     model_config = SettingsConfigDict(env_file=str(BASE_DIR / ".env"), env_file_encoding="utf-8")
 
