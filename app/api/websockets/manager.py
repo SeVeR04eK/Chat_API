@@ -1,5 +1,7 @@
 from fastapi.websockets import WebSocket
 
+from app.schemas import WebsocketSendMessage
+
 
 class ConnectionManager:
     def __init__(self):
@@ -22,12 +24,12 @@ class ConnectionManager:
         if not room:
             del self.rooms[name]
 
-    async def broadcast(self, name, message: str):
+    async def broadcast(self, name, message: WebsocketSendMessage):
         room = self.rooms.get(name, set())
         dead_connections = set()
         for connection in room:
             try:
-                await connection.send_text(message)
+                await connection.send_json(message.model_dump())
             except Exception:
                 dead_connections.add(connection)
         

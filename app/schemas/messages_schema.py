@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import Annotated
+from typing import Annotated, Literal
 from datetime import datetime
 
 
@@ -13,3 +13,14 @@ class MessageRead(BaseModel):
     model_config = {
         "from_attributes": True
     }
+
+class WebsocketMessage(BaseModel):
+    text: Annotated[str, Field(..., title="Message text")]
+
+class WebsocketReceiveMessage(WebsocketMessage):
+    pass
+
+
+class WebsocketSendMessage(WebsocketMessage):
+    type: Literal["message", "join", "leave", "error"]
+    username: Annotated[str, Field(title="Username")]

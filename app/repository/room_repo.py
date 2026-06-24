@@ -1,7 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from sqlalchemy.orm import selectinload
 from datetime import datetime, timezone
+from typing import Optional, Sequence
 
 from app.models import Room
 from app.schemas import RoomCreate
@@ -24,17 +24,31 @@ class RoomRepository:
 
         return room
 
-    async def get_all_rooms(self) -> list[Room]:
+    async def get_all_rooms(
+            self,
+            limit: Optional[int],
+            offset: Optional[int],
+            from_newest: Optional[bool]
+    ) -> Sequence[Room]:
+
         request = select(Room)
 
-        result = await self.session.execute(request)
+        if from_newest:
+            request = request.order_by(Room.id.desc())
+        else:
+            request = request.order_by(Room.id.asc())
 
-        return list(result.scalars().all())
+        if offset is not None:
+            request = request.offset(offset)
+
+        if limit is not None:
+            request = request.limit(limit)
+
+        return (await self.session.scalars(request)).all()
+
 
     async def get_room_by_name(self, name: str) -> Room:
-        request = (select(Room)
-                   .options(selectinload(Room.messages))
-                   .where(Room.name == name))
+        request = (select(Room).where(Room.name == name))
 
         return await self.session.scalar(request)
 

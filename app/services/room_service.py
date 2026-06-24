@@ -1,5 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException
+from typing import Optional
 
 from app.schemas import RoomCreate, RoomRead
 from app.repository import RoomRepository
@@ -20,8 +21,14 @@ class RoomService:
 
         return RoomRead.model_validate(new_room)
 
-    async def get_all_rooms_service(self) -> list[RoomRead]:
-        rooms = await self.repository.get_all_rooms()
+    async def get_all_rooms_service(
+            self,
+            limit: Optional[int],
+            offset: Optional[int],
+            from_newest: Optional[bool]
+    ) -> list[RoomRead]:
+
+        rooms = await self.repository.get_all_rooms(limit, offset, from_newest)
 
         return [RoomRead.model_validate(room) for room in rooms]
 

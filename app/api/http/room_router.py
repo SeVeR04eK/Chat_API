@@ -1,5 +1,5 @@
-from fastapi import APIRouter, status, Depends, Path
-from typing import Annotated
+from fastapi import APIRouter, status, Depends, Path, Query
+from typing import Annotated, Optional
 
 from app.schemas import RoomRead, RoomCreate
 from app.api.deps import db, get_current_user_http
@@ -21,10 +21,21 @@ async def create_room(
 @room_router.get("/", status_code=status.HTTP_200_OK, response_model=list[RoomRead],
                  dependencies=[Depends(get_current_user_http)])
 async def get_all_rooms(
-        session: db
+        session: db,
+        limit: Annotated[
+            Optional[int],
+            Query(title="Limit of rooms", ge=1, le=100)
+        ] = None,
+        offset: Annotated[
+            Optional[int],
+            Query(title="Offset of rooms", ge=0, le=100)
+        ] = None,
+        from_newest: Annotated[
+            Optional[bool],
+            Query(title="Sort from newest")] = False,
 ):
     service = RoomService(session=session)
-    return await service.get_all_rooms_service()
+    return await service.get_all_rooms_service(limit, offset, from_newest)
 
 
 @room_router.get("/{name}", status_code=status.HTTP_200_OK, response_model=RoomRead,
