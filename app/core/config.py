@@ -17,7 +17,11 @@ class Settings(BaseSettings):
     pagination_max_offset: int = 100
     db_max_concurrent_queries: int = 10
 
-    model_config = SettingsConfigDict(env_file=str(BASE_DIR / ".env"), env_file_encoding="utf-8")
+    model_config = SettingsConfigDict(
+        env_file=str(BASE_DIR / ".env") if (BASE_DIR / ".env").exists() else None,
+        env_file_encoding="utf-8",
+        env_ignore_empty=True
+    )
 
 
 try:
