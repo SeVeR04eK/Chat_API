@@ -42,15 +42,17 @@ async def websocket_endpoint(
         while True:
             try:
                 message_data = await websocket.receive_json()
+            except WebSocketDisconnect:
+                raise
             except Exception:
-                await websocket.send_json(WebsocketSendMessage(type="error", text="Invalid JSON format", username="system"))
+                await websocket.send_json(WebsocketSendMessage(type="error", text="Invalid JSON format", username="system").model_dump())
                 continue
             
             try:
                 incoming = WebsocketReceiveMessage(**message_data)
                 data = incoming.text
             except Exception:
-                await websocket.send_json(WebsocketSendMessage(type="error", text="Invalid message format", username="system"))
+                await websocket.send_json(WebsocketSendMessage(type="error", text="Invalid message format", username="system").model_dump())
                 continue
             if not data.strip():
                 continue
@@ -58,12 +60,15 @@ async def websocket_endpoint(
                 await repository.create_message(user_id=user.id, room_name=name, text=data)
                 await manager.broadcast(name, WebsocketSendMessage(type="message", text=data, username=user.username))
             except Exception as e:
-                await websocket.send_json(WebsocketSendMessage(type="error", text=f"Error sending message: {str(e)}", username="system"))
+                await websocket.send_json(WebsocketSendMessage(type="error", text=f"Error sending message: {str(e)}", username="system").model_dump())
 
     except WebSocketDisconnect:
         manager.disconnect(name, websocket)
     except Exception as e:
-        await websocket.close(code=1011, reason=f"Server error: {str(e)}")
+        try:
+            await websocket.close(code=1011, reason=f"Server error: {str(e)}")
+        except Exception:
+            pass
         manager.disconnect(name, websocket)
     finally:
         await manager.broadcast(name, WebsocketSendMessage(type="leave", text=f"{user.username} has left the room", username=user.username))
